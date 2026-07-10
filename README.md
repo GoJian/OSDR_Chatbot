@@ -6,9 +6,10 @@ It runs entirely on your machine: study metadata is crawled from the OSDR API, e
 embedding model, and stored in a vector database. At query time a local LLM (via [ollama](https://ollama.com/))
 answers questions grounded in the studies retrieved by semantic search. Ships with a **React web UI**
 (streaming answers, cited studies, browser-saved history), a **CLI**, and a standalone read-only
-**Study Browser** for exploring the cached corpus.
 
 Server is running live here: [https://datahive.uwyo.edu/osdr/](https://datahive.uwyo.edu/osdr/).
+
+**Study Browser** for exploring the cached corpus.
 ---
 
 ## Architecture
