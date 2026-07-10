@@ -1,12 +1,18 @@
 # OSDR ChatBot
 
-A local **RAG chatbot** for exploring NASA's [Open Science Data Repository (OSDR)](https://osdr.nasa.gov/) — every OSD study, not just a curated few.
+A local **RAG chatbot** for exploring NASA's [Open Science Data Repository (OSDR)](https://osdr.nasa.gov/) built 
+from all OSDR study metadata (588 studies as of July 10, 2026).
 
-It runs entirely on your machine: study metadata is crawled from the OSDR API, embedded with a local
-embedding model, and stored in a vector database. At query time a local LLM (via [ollama](https://ollama.com/))
+This system runs entirely locally: study metadata is crawled from the OSDR API, embedded with a local
+embedding model, and stored in a vector database. At query time, a local LLM (via [ollama](https://ollama.com/))
 answers questions grounded in the studies retrieved by semantic search. Ships with a **React web UI**
-(streaming answers, cited studies, browser-saved history) and a **CLI**.
+(streaming answers, cited studies, browser-saved history). It also runs locally from the terminal.
 
+It is fully hosted and running live here: [https://datahive.uwyo.edu/osdr/](https://datahive.uwyo.edu/osdr/). The
+server is configured with 72-core Intel(R) Xeon(R) Gold 6150 CPU and a single Tesla V100-DGXS-32GB GPU, 503GB
+System RAM. Contact Dr. Jian Gong at the University of Wyoming for hosting or server-related questions.
+
+**Study Browser** for exploring the cached corpus.
 ---
 
 ## Architecture
