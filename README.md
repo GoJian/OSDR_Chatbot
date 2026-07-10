@@ -18,24 +18,27 @@ System RAM. Contact Dr. Jian Gong at the University of Wyoming for hosting or se
 ## Architecture
 
 ```
+  ┌──────────── ingest (one-time / on refresh) ────────────┐   ┌──────── query time ────────┐
+
                  fetch_metadata.py                 ingest.py
  OSDR API  ───────────────────────►  data/metadata/*.json  ───────────────────►  ChromaDB
- (588 studies)   crawl + file lists      (one JSON / study)   chunk + embed         (vector index)
-                                                              (nomic-embed-text)
-                                                                                        │
- Browser (React)  ◄──SSE──  FastAPI (backend/app.py)  ◄── rag.py: embed query, top-k ──┤
-   localStorage history        /api/chat, /api/studies,        + gemma4 (ollama) answer │
-   cited-study chips           /api/search, /api/models                                 │
-                                                                                        │
- Study Browser    ◄─────────  FastAPI (backend/browser.py)  ◄── rag.py: retrieve ───────┘
-   (static HTML/JS)             /api/studies, /api/study, /api/search   (read-only, no LLM)
+ (588 studies)   crawl + file lists      (one JSON / study)   chunk + embed        (vector index)
+                                                              (nomic-embed-text)          │
+                                                                                          │
+                                                                       rag.py: embed query,
+                                                                       retrieve top-k chunks
+                                                                                          │
+ Browser (React)  ┐                                                                       ▼
+   localStorage    ├─◄──SSE──  FastAPI (backend/app.py)  ◄──── grounded context ── + gemma4 (ollama)
+   cited chips     │             /api/chat /api/studies                              generate answer
+ CLI (chatbot.py) ─┘             /api/study /api/search /api/models
 ```
 
 - **Real RAG** — nomic-embed-text embeddings + ChromaDB cosine search (not keyword matching).
 - **Local & offline at query time** — embeddings and the chat model both run through ollama.
+- **Two front ends, one backend** — the React web UI and the CLI both call the same `rag.py`
+  retrieval + `ollama_client.py` generation path.
 - **Browser history** — conversations persist in `localStorage`; survive reloads.
-- **Study Browser** — a separate read-only service (no LLM) to list, semantic-search, and inspect
-  cached studies; shares the same metadata cache and vector store as the chatbot.
 
 ---
 
@@ -74,17 +77,13 @@ cd frontend && npm install && npm run dev  # dev UI at http://localhost:5173
 
 # 5b. …or use the CLI
 python chatbot.py
-
-# 5c. …or launch the read-only Study Browser (its own service)
-uvicorn backend.browser:app --port 8078   # browse UI at http://localhost:8078/
 ```
 
 > **Production build:** `cd frontend && npm run build` then just run `uvicorn backend.app:app --port 8077`
 > — FastAPI serves the built UI at `http://localhost:8077/`.
 
-> **Port note:** the chatbot backend defaults to **8077** and the Study Browser to **8078** (port 8000
-> is commonly taken). The Vite dev proxy in `frontend/vite.config.js` points at 8077 — change both
-> together if you use a different port.
+> **Port note:** the backend defaults to **8077** (port 8000 is commonly taken). The Vite dev proxy in
+> `frontend/vite.config.js` points at 8077 — change both together if you use a different port.
 
 ---
 
@@ -117,7 +116,7 @@ fetching to refresh the vector index.
 
 ## Web API (FastAPI)
 
-**Chatbot** — `backend/app.py` (default port 8077):
+`backend/app.py` (default port 8077):
 
 | Method | Path | Purpose |
 |--------|------|---------|
@@ -126,15 +125,7 @@ fetching to refresh the vector index.
 | GET | `/api/study/{id}` | Full cached record for one study |
 | GET | `/api/search?q=` | Semantic study search |
 | GET | `/api/models` | Installed ollama models (for the picker) |
-
-**Study Browser** — `backend/browser.py` (default port 8078, read-only, no LLM):
-
-| Method | Path | Purpose |
-|--------|------|---------|
-| GET | `/api/studies` | List cached studies (id, title, file_count) |
-| GET | `/api/study/{id}` | Full cached record for one study |
-| GET | `/api/search?q=` | Semantic study search |
-| GET | `/` | The browse UI (`backend/browser_static/index.html`) |
+| GET | `/` | The built React UI (after `npm run build`) |
 
 ---
 
@@ -163,9 +154,7 @@ OSDR_Chatbot/
 │   ├── fetch_metadata.py    # crawl OSDR → data/metadata/*.json
 │   ├── ingest.py            # chunk + embed → ChromaDB
 │   ├── rag.py               # semantic retrieval + cited context
-│   ├── app.py               # FastAPI (SSE chat, studies, search, models)
-│   ├── browser.py           # FastAPI Study Browser (read-only, no LLM)
-│   └── browser_static/       # static browse UI (index.html)
+│   └── app.py               # FastAPI (SSE chat, studies, search, models)
 ├── chatbot.py              # CLI front end (reuses the backend)
 ├── frontend/                # React + Vite SPA (chatbot)
 │   └── src/{App.jsx, api.js, components/, hooks/useConversations.js}
@@ -184,7 +173,7 @@ elevated intracranial pressure) — likely tied to cephalad fluid shifts in micr
 OSDR, so you can ask about any space-biology topic in the repository.
 
 **Further reading:** [NASA HRP — SANS](https://www.nasa.gov/hrp/elements/sans) ·
-[OSDR Study Browser](https://osdr.nasa.gov/bio/repo/search)
+[OSDR Repository Search](https://osdr.nasa.gov/bio/repo/search)
 
 ---
 
