@@ -5,7 +5,8 @@ A local **RAG chatbot** for exploring NASA's [Open Science Data Repository (OSDR
 It runs entirely on your machine: study metadata is crawled from the OSDR API, embedded with a local
 embedding model, and stored in a vector database. At query time a local LLM (via [ollama](https://ollama.com/))
 answers questions grounded in the studies retrieved by semantic search. Ships with a **React web UI**
-(streaming answers, cited studies, browser-saved history) and a **CLI**.
+(streaming answers, cited studies, browser-saved history), a **CLI**, and a standalone read-only
+**Study Browser** for exploring the cached corpus.
 
 ---
 
@@ -17,14 +18,19 @@ answers questions grounded in the studies retrieved by semantic search. Ships wi
  (588 studies)   crawl + file lists      (one JSON / study)   chunk + embed         (vector index)
                                                               (nomic-embed-text)
                                                                                         │
- Browser (React)  ◄──SSE──  FastAPI (backend/app.py)  ◄── rag.py: embed query, top-k ──┘
-   localStorage history        /api/chat, /api/studies,        + gemma4 (ollama) answer
-   cited-study chips           /api/search, /api/models
+ Browser (React)  ◄──SSE──  FastAPI (backend/app.py)  ◄── rag.py: embed query, top-k ──┤
+   localStorage history        /api/chat, /api/studies,        + gemma4 (ollama) answer │
+   cited-study chips           /api/search, /api/models                                 │
+                                                                                        │
+ Study Browser    ◄─────────  FastAPI (backend/browser.py)  ◄── rag.py: retrieve ───────┘
+   (static HTML/JS)             /api/studies, /api/study, /api/search   (read-only, no LLM)
 ```
 
 - **Real RAG** — nomic-embed-text embeddings + ChromaDB cosine search (not keyword matching).
 - **Local & offline at query time** — embeddings and the chat model both run through ollama.
 - **Browser history** — conversations persist in `localStorage`; survive reloads.
+- **Study Browser** — a separate read-only service (no LLM) to list, semantic-search, and inspect
+  cached studies; shares the same metadata cache and vector store as the chatbot.
 
 ---
 
@@ -63,13 +69,17 @@ cd frontend && npm install && npm run dev  # dev UI at http://localhost:5173
 
 # 5b. …or use the CLI
 python chatbot.py
+
+# 5c. …or launch the read-only Study Browser (its own service)
+uvicorn backend.browser:app --port 8078   # browse UI at http://localhost:8078/
 ```
 
 > **Production build:** `cd frontend && npm run build` then just run `uvicorn backend.app:app --port 8077`
 > — FastAPI serves the built UI at `http://localhost:8077/`.
 
-> **Port note:** the backend defaults to **8077** (port 8000 is commonly taken). The Vite dev proxy
-> in `frontend/vite.config.js` points at 8077 — change both together if you use a different port.
+> **Port note:** the chatbot backend defaults to **8077** and the Study Browser to **8078** (port 8000
+> is commonly taken). The Vite dev proxy in `frontend/vite.config.js` points at 8077 — change both
+> together if you use a different port.
 
 ---
 
@@ -102,6 +112,8 @@ fetching to refresh the vector index.
 
 ## Web API (FastAPI)
 
+**Chatbot** — `backend/app.py` (default port 8077):
+
 | Method | Path | Purpose |
 |--------|------|---------|
 | POST | `/api/chat` | Stream an answer (SSE: `sources` → `token`s → `done`). Body: `{message, history, model?}` |
@@ -109,6 +121,15 @@ fetching to refresh the vector index.
 | GET | `/api/study/{id}` | Full cached record for one study |
 | GET | `/api/search?q=` | Semantic study search |
 | GET | `/api/models` | Installed ollama models (for the picker) |
+
+**Study Browser** — `backend/browser.py` (default port 8078, read-only, no LLM):
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/api/studies` | List cached studies (id, title, file_count) |
+| GET | `/api/study/{id}` | Full cached record for one study |
+| GET | `/api/search?q=` | Semantic study search |
+| GET | `/` | The browse UI (`backend/browser_static/index.html`) |
 
 ---
 
@@ -137,9 +158,11 @@ OSDR_Chatbot/
 │   ├── fetch_metadata.py    # crawl OSDR → data/metadata/*.json
 │   ├── ingest.py            # chunk + embed → ChromaDB
 │   ├── rag.py               # semantic retrieval + cited context
-│   └── app.py               # FastAPI (SSE chat, studies, search, models)
+│   ├── app.py               # FastAPI (SSE chat, studies, search, models)
+│   ├── browser.py           # FastAPI Study Browser (read-only, no LLM)
+│   └── browser_static/       # static browse UI (index.html)
 ├── chatbot.py              # CLI front end (reuses the backend)
-├── frontend/                # React + Vite SPA
+├── frontend/                # React + Vite SPA (chatbot)
 │   └── src/{App.jsx, api.js, components/, hooks/useConversations.js}
 ├── requirements.txt
 └── data/  (gitignored)      # metadata/, index.json, chroma/

@@ -23,7 +23,7 @@ OSDR_FILES_URL = f"{OSDR_API_BASE}/osd/files"
 OSDR_SEARCH_URL = f"{OSDR_API_BASE}/search"
 OSDR_STUDY_TYPE = "cgene"               # search `type` that filters to the OSD study index
 
-# --- Curated eye/SANS studies (used by --curated fetch mode & optional relevance boost) ---
+# --- Curated eye/SANS studies (used by the --curated fetch mode) ---
 EYE_SANS_STUDY_IDS = [
     "OSD-679",   # Head-Down Tilt - Intracranial/Intraocular Pressures + Retina (RNA-seq)
     "OSD-680",   # Head-Down Tilt - Intracranial/Intraocular Pressures + Retina (proteomics)
