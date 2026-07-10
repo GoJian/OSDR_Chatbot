@@ -7,7 +7,7 @@ embedding model, and stored in a vector database. At query time a local LLM (via
 answers questions grounded in the studies retrieved by semantic search. Ships with a **React web UI**
 (streaming answers, cited studies, browser-saved history), a **CLI**, and a standalone read-only
 
-Server is running live here: [https://datahive.uwyo.edu/osdr/](https://datahive.uwyo.edu/osdr/).
+Server is fully hosted and running live here: [https://datahive.uwyo.edu/osdr/](https://datahive.uwyo.edu/osdr/).
 
 **Study Browser** for exploring the cached corpus.
 ---
