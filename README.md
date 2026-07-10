@@ -8,6 +8,7 @@ answers questions grounded in the studies retrieved by semantic search. Ships wi
 (streaming answers, cited studies, browser-saved history), a **CLI**, and a standalone read-only
 **Study Browser** for exploring the cached corpus.
 
+Server is running live here: [https://datahive.uwyo.edu/osdr/](https://datahive.uwyo.edu/osdr/).
 ---
 
 ## Architecture
