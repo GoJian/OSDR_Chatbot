@@ -1,22 +1,29 @@
 from pathlib import Path
 
-# Ollama
+# --- Ollama ---
 OLLAMA_HOST = "http://localhost:11434"
-OLLAMA_MODEL = "gemma4"
-OLLAMA_FALLBACK_MODEL = "qwen3.6:latest"
+OLLAMA_MODEL = "gemma4"                 # preferred chat model
+OLLAMA_FALLBACK_MODEL = "qwen2.5:7b-instruct"
+OLLAMA_EMBED_MODEL = "nomic-embed-text"  # local embedding model for RAG
 
-# Data storage (gitignored)
-PROJECT_ROOT = Path(__file__).parent
+# --- Data storage (gitignored) ---
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = PROJECT_ROOT / "data"
 METADATA_DIR = DATA_DIR / "metadata"
 INDEX_FILE = DATA_DIR / "index.json"
 
-# OSDR API
+# --- Vector store (ChromaDB) ---
+CHROMA_DIR = DATA_DIR / "chroma"
+CHROMA_COLLECTION = "osdr_studies"
+RAG_TOP_K = 10                          # chunks retrieved per query
+
+# --- OSDR API ---
 OSDR_API_BASE = "https://osdr.nasa.gov/osdr/data"
 OSDR_FILES_URL = f"{OSDR_API_BASE}/osd/files"
 OSDR_SEARCH_URL = f"{OSDR_API_BASE}/search"
+OSDR_STUDY_TYPE = "cgene"               # search `type` that filters to the OSD study index
 
-# Eye/SANS study IDs — curated list of OSD studies related to ocular/neuro-ocular spaceflight research
+# --- Curated eye/SANS studies (used by the --curated fetch mode) ---
 EYE_SANS_STUDY_IDS = [
     "OSD-679",   # Head-Down Tilt - Intracranial/Intraocular Pressures + Retina (RNA-seq)
     "OSD-680",   # Head-Down Tilt - Intracranial/Intraocular Pressures + Retina (proteomics)
@@ -35,7 +42,7 @@ EYE_SANS_STUDY_IDS = [
     "OSD-364",   # Idiopathic intracranial hypertension - gene expression (replicate)
 ]
 
-# Search keywords for additional discovery
+# Search keywords for --search discovery
 EYE_SANS_KEYWORDS = [
     "eye", "retina", "optic", "intraocular", "intracranial",
     "SANS", "neuro-ocular", "vision", "photoreceptor", "choroidal",
