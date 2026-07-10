@@ -1,0 +1,23 @@
+# User systemd unit for the OSDR ChatBot backend.
+# Install: copy to ~/.config/systemd/user/osdr-chatbot.service then
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now osdr-chatbot
+#   loginctl enable-linger $USER          # survive logout/reboot
+# (In a non-login shell first: export XDG_RUNTIME_DIR=/run/user/$(id -u))
+#
+# Bound to 127.0.0.1 — it sits behind the Apache reverse proxy (see DEPLOY.md),
+# not exposed directly on the shared host. Adjust paths for your checkout.
+
+[Unit]
+Description=OSDR ChatBot (FastAPI RAG webapp, behind Apache /osdr/)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/gojian/Code/OSDR_Chatbot
+ExecStart=/home/gojian/Code/OSDR_Chatbot/.venv/bin/uvicorn backend.app:app --host 127.0.0.1 --port 8077
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=default.target
