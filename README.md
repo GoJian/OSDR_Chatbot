@@ -34,7 +34,7 @@ System RAM. Contact Dr. Jian Gong at the University of Wyoming for hosting or se
  CLI (chatbot.py) ─┘             /api/study /api/search /api/models
 ```
 
-- **Real RAG** — nomic-embed-text embeddings + ChromaDB cosine search (not keyword matching).
+- **RAG** — nomic-embed-text embeddings + ChromaDB cosine search (not keyword matching).
 - **Local & offline at query time** — embeddings and the chat model both run through ollama.
 - **Two front ends, one backend** — the React web UI and the CLI both call the same `rag.py`
   retrieval + `ollama_client.py` generation path.
@@ -79,7 +79,7 @@ cd frontend && npm install && npm run dev  # dev UI at http://localhost:5173
 python chatbot.py
 ```
 
-> **Production build:** `cd frontend && npm run build` then just run `uvicorn backend.app:app --port 8077`
+> **Production build:** `cd frontend && npm run build` then run `uvicorn backend.app:app --port 8077`
 > — FastAPI serves the built UI at `http://localhost:8077/`.
 
 > **Port note:** the backend defaults to **8077** (port 8000 is commonly taken). The Vite dev proxy in
